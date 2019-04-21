@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="colorPrimary">#FF8FB2</color>
+    <color name="colorPrimaryDark">#A797FF</color>
+    <color name="colorAccent">#00E5FF</color>
+
+    <color name="white">#fff</color>
+
+    <integer-array name="list_gradient_color">
+        <item>@color/colorPrimary</item>
+        <item>@color/colorPrimaryDark</item>
+        <item>@color/colorAccent</item>
+    </integer-array>
+
+</resources>
