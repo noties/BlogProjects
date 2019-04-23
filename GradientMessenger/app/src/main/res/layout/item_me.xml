@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="16dip"
+    android:paddingTop="8dip"
+    android:paddingRight="24dip"
+    android:paddingBottom="8dip"
+    tools:ignore="RtlHardcoded">
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:background="#ddd"
+        android:padding="8dip"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="#000"
+        tools:text="Hello!" />
+
+</FrameLayout>
