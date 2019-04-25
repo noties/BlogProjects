@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="message_grouped_vertical_padding">1dip</dimen>
+    <dimen name="message_regular_vertical_padding">8dip</dimen>
+
+    <dimen name="message_grouped_corner_radius">2dip</dimen>
+    <dimen name="message_regular_corner_radius">16dip</dimen>
+
+</resources>
