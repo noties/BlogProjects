@@ -6,6 +6,7 @@
     <color name="colorAccent">#00E5FF</color>
 
     <color name="white">#fff</color>
+    <color name="message_me_background">#ddd</color>
 
     <integer-array name="list_gradient_color">
         <item>@color/colorPrimary</item>

@@ -18,23 +18,26 @@ import io.noties.debug.Debug
 // * corner radius
 
 class Config(
-        @Px val groupedPadding: Int,
-        @Px val regularPadding: Int,
-        @Px val groupedCornerRadius: Int,
-        @Px val regularCornerRadius: Int,
-        @ColorInt val meBackgroundColor: Int,
-        val youBackgroundDrawable: Drawable)
+    @Px val groupedPadding: Int,
+    @Px val regularPadding: Int,
+    @Px val groupedCornerRadius: Int,
+    @Px val regularCornerRadius: Int,
+    @ColorInt val meBackgroundColor: Int,
+    val youBackgroundDrawable: Drawable
+)
 
 class MessageDecoration(
-        private val config: Config,
-        private val meItemViewType: Int,
-        private val youItemViewType: Int
+    private val config: Config,
+    private val meItemViewType: Int,
+    private val youItemViewType: Int
 ) : RecyclerView.ItemDecoration() {
-
-//    private val drawable: Drawable
 
     private val path = Path()
     private val rectF = RectF()
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = config.meBackgroundColor
+        style = Paint.Style.FILL
+    }
 
     private val groupedCornerRadiusF = config.groupedCornerRadius.toFloat()
     private val regularCornerRadiusF = config.regularCornerRadius.toFloat()
@@ -74,7 +77,8 @@ class MessageDecoration(
             // it's required for us to have x,y coordinates _relative_ to RecyclerView
             // convert to floats
             val (x, y) = textView.relativeTo(parent)
-                    .let { Pair(it.x.toFloat(), it.y.toFloat()) }
+//                .let { Pair(it.x.toFloat(), it.y.toFloat() }
+                .let { Pair(it.x.toFloat(), it.y.toFloat() + view.translationY) }
 
             position = holder.adapterPosition
 
@@ -114,16 +118,18 @@ class MessageDecoration(
                 // also, we could evaluate layout direction and swap far-ends for RTL
                 val corners = if (itemViewType == meItemViewType) {
                     Corners(
-                            previousItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF),
-                            regularCornerRadiusF,
-                            regularCornerRadiusF,
-                            nextItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF))
+                        previousItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF),
+                        regularCornerRadiusF,
+                        regularCornerRadiusF,
+                        nextItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF)
+                    )
                 } else {
                     Corners(
-                            regularCornerRadiusF,
-                            previousItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF),
-                            nextItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF),
-                            regularCornerRadiusF)
+                        regularCornerRadiusF,
+                        previousItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF),
+                        nextItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF),
+                        regularCornerRadiusF
+                    )
                 }
 
                 path.apply {
@@ -141,9 +147,13 @@ class MessageDecoration(
 
                 c.clipPath(path)
 
+                val alpha = (view.alpha * 255.0F + 0.5F).toInt()
+
                 if (itemViewType == meItemViewType) {
-                    c.drawColor(config.meBackgroundColor)
+                    paint.alpha = alpha
+                    c.drawPaint(paint)
                 } else {
+                    config.youBackgroundDrawable.alpha = alpha
                     config.youBackgroundDrawable.draw(c)
                 }
             }
@@ -155,6 +165,7 @@ class MessageDecoration(
         // clear offsets first
         outRect.set(0, 0, 0, 0)
 
+        // we must have adapter in order to detect neighbors
         val adapter = parent.adapter ?: return
         val holder = parent.findContainingViewHolder(view) ?: return
 
@@ -170,17 +181,18 @@ class MessageDecoration(
         // (they can be absent from layout at this point)
         val position = holder.adapterPosition
 
-        if (position > 0 && itemViewType == adapter.getItemViewType(position - 1)) {
-            outRect.top = config.groupedPadding
+        outRect.top = if (position > 0 && itemViewType == adapter.getItemViewType(position - 1)) {
+            config.groupedPadding
         } else {
-            outRect.top = config.regularPadding
+            config.regularPadding
         }
 
-        if (position < (adapter.itemCount) - 1 && itemViewType == adapter.getItemViewType(position + 1)) {
-            outRect.bottom = config.groupedPadding
-        } else {
-            outRect.bottom = config.regularPadding
-        }
+        outRect.bottom =
+            if (position < (adapter.itemCount) - 1 && itemViewType == adapter.getItemViewType(position + 1)) {
+                config.groupedPadding
+            } else {
+                config.regularPadding
+            }
     }
 
     private companion object {
@@ -250,10 +262,11 @@ class MessageDecoration(
     }
 
     private class Corners(
-            val leftTop: Float,
-            val topRight: Float,
-            val bottomRight: Float,
-            val leftBottom: Float)
+        val leftTop: Float,
+        val topRight: Float,
+        val bottomRight: Float,
+        val leftBottom: Float
+    )
 
     private fun <T> Boolean.elvis(left: T, right: T) = if (this) left else right
 
@@ -270,10 +283,11 @@ class MessageDecoration(
                 // |x| | |
                 // | | | |
                 rectF.set(
-                        bounds.left,
-                        bounds.top,
-                        bounds.left + diameter,
-                        bounds.top + diameter)
+                    bounds.left,
+                    bounds.top,
+                    bounds.left + diameter,
+                    bounds.top + diameter
+                )
 
                 this.lineTo(bounds.left, bounds.top + radius)
                 this.arcTo(rectF, 180.0F, 90.0F)
@@ -284,10 +298,10 @@ class MessageDecoration(
                 // | | |x|
                 // | | | |
                 rectF.set(
-                        bounds.right - diameter,
-                        bounds.top,
-                        bounds.right,
-                        bounds.top + diameter
+                    bounds.right - diameter,
+                    bounds.top,
+                    bounds.right,
+                    bounds.top + diameter
                 )
 
                 this.lineTo(bounds.right - radius, bounds.top)
@@ -299,10 +313,11 @@ class MessageDecoration(
                 // | | | |
                 // | | |x|
                 rectF.set(
-                        bounds.right - diameter,
-                        bounds.bottom - diameter,
-                        bounds.right,
-                        bounds.bottom)
+                    bounds.right - diameter,
+                    bounds.bottom - diameter,
+                    bounds.right,
+                    bounds.bottom
+                )
 
                 this.lineTo(bounds.right, bounds.bottom - radius)
                 this.arcTo(rectF, 0.0F, 90.0F)
@@ -313,10 +328,11 @@ class MessageDecoration(
                 // | | | |
                 // |x| | |
                 rectF.set(
-                        bounds.left,
-                        bounds.bottom - diameter,
-                        bounds.left + diameter,
-                        bounds.bottom)
+                    bounds.left,
+                    bounds.bottom - diameter,
+                    bounds.left + diameter,
+                    bounds.bottom
+                )
 
                 this.lineTo(bounds.right - radius, bounds.bottom)
                 this.arcTo(rectF, 90.0F, 90.0F)

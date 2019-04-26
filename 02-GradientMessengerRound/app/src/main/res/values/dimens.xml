@@ -7,4 +7,6 @@
     <dimen name="message_grouped_corner_radius">2dip</dimen>
     <dimen name="message_regular_corner_radius">16dip</dimen>
 
+    <dimen name="app_bar_height">56dip</dimen>
+
 </resources>

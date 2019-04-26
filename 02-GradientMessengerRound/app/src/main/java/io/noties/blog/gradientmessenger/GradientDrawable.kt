@@ -24,6 +24,7 @@ class GradientDrawable(private val colors: IntArray) : Drawable() {
     }
 
     override fun setAlpha(alpha: Int) {
+        paint.alpha = alpha
     }
 
     override fun getOpacity(): Int = PixelFormat.OPAQUE
