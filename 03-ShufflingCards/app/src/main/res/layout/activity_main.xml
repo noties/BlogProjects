@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <io.noties.blog.shufflingcards.ShufflingCardsView
+        android:id="@+id/shuffling_cards"
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="1" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/midnight_sky"
+            android:layout_width="match_parent"
+            android:layout_height="56dip"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dip"
+            android:paddingRight="16dip">
+
+            <ImageView
+                android:layout_width="48dip"
+                android:layout_height="48dip"
+                android:src="@drawable/img_card_midnight_sky" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="8dip"
+                android:text="Midnight sky"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/lagoon_blue"
+            android:layout_width="match_parent"
+            android:layout_height="56dip"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dip"
+            android:paddingRight="16dip">
+
+            <ImageView
+                android:layout_width="48dip"
+                android:layout_height="48dip"
+                android:src="@drawable/img_card_lagoon_blue" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="8dip"
+                android:text="Lagoon blue"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/hot_coral"
+            android:layout_width="match_parent"
+            android:layout_height="56dip"
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dip"
+            android:paddingRight="16dip">
+
+            <ImageView
+                android:layout_width="48dip"
+                android:layout_height="48dip"
+                android:src="@drawable/img_card_hot_coral" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="8dip"
+                android:text="Hot coral"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

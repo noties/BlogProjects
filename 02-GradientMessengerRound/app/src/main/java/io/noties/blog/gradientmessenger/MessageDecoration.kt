@@ -4,41 +4,32 @@ import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.ColorInt
 import androidx.annotation.Px
 import androidx.recyclerview.widget.RecyclerView
-import io.noties.debug.Debug
 
-// we need configuration:
-// * actual drawable that we will use from You message
-// * both itemViewTypes for Me & You messages
-// * background for Me message
-// * regular padding
-// * grouped padding (when multiple messages are grouped by type)
-// * corner radius
-
+// NB, if you are using a drawable from resources, you must mutate it.
 class Config(
-    @Px val groupedPadding: Int,
-    @Px val regularPadding: Int,
-    @Px val groupedCornerRadius: Int,
-    @Px val regularCornerRadius: Int,
-    @ColorInt val meBackgroundColor: Int,
-    val youBackgroundDrawable: Drawable
+        @Px val groupedMargin: Int,
+        @Px val regularMargin: Int,
+        @Px val groupedCornerRadius: Int,
+        @Px val regularCornerRadius: Int,
+        val meBackgroundDrawable: Drawable,
+        val youBackgroundDrawable: Drawable
 )
 
 class MessageDecoration(
-    private val config: Config,
-    private val meItemViewType: Int,
-    private val youItemViewType: Int
+        private val config: Config,
+        private val meItemViewType: Int,
+        private val youItemViewType: Int
 ) : RecyclerView.ItemDecoration() {
 
+    // path for items area (that will be clipped)
     private val path = Path()
-    private val rectF = RectF()
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = config.meBackgroundColor
-        style = Paint.Style.FILL
-    }
 
+    // rect to hold view dimensions
+    private val rectF = RectF()
+
+    // we cannot use @Px annotation with Floats, so make an explicit conversion
     private val groupedCornerRadiusF = config.groupedCornerRadius.toFloat()
     private val regularCornerRadiusF = config.regularCornerRadius.toFloat()
 
@@ -48,11 +39,6 @@ class MessageDecoration(
 
         // we need adapter to check for neighbor items
         val adapter = parent.adapter ?: return
-
-        // ensure drawable bounds
-        // previously we were listening for RecyclerView onGlobalLayout events,
-        // but as drawable bounds are lazy (aka if they haven't changed nothing will be triggered)
-        config.youBackgroundDrawable.setBounds(0, 0, parent.width, parent.height)
 
         var view: View
         var holder: RecyclerView.ViewHolder
@@ -68,6 +54,7 @@ class MessageDecoration(
             holder = parent.findContainingViewHolder(view) ?: continue
             itemViewType = holder.itemViewType
 
+            // process only message items
             if (itemViewType != meItemViewType && itemViewType != youItemViewType) {
                 continue
             }
@@ -76,10 +63,13 @@ class MessageDecoration(
 
             // it's required for us to have x,y coordinates _relative_ to RecyclerView
             // convert to floats
+            // apply translationY for item animations (as we know that we operate on a vertical list)
+            // if we would operate on a grid then translationX should also be taken into account
             val (x, y) = textView.relativeTo(parent)
 //                .let { Pair(it.x.toFloat(), it.y.toFloat() }
-                .let { Pair(it.x.toFloat(), it.y.toFloat() + view.translationY) }
+                    .let { Pair(it.x.toFloat(), it.y.toFloat() + view.translationY) }
 
+            // position to obtain neighbors
             position = holder.adapterPosition
 
             // now, check if we have previous item of our type
@@ -101,8 +91,10 @@ class MessageDecoration(
             // for You -> left
             // far-end is always rounded with regular padding
 
+            // apply view bounds
             rectF.set(x, y, x + textView.width, y + textView.height)
 
+            // a single message in a group
             if (!previousItemTheSameType && !nextItemTheSameType) {
 
                 // just a regular rounded rect for all corners
@@ -110,57 +102,62 @@ class MessageDecoration(
 
             } else {
 
-                // move path to {x, half-height}, as our method to round corners draws line
-                // and to do so we must initialize position of path (first corner to draw
-                // will be LEFT_TOP, so we must place path _somewhere_ in-between LEFT_TOP & LEFT_BOTTOM)
-                path.moveTo(rectF.left, rectF.top + (rectF.height() / 2))
-
-                // also, we could evaluate layout direction and swap far-ends for RTL
-                val corners = if (itemViewType == meItemViewType) {
-                    Corners(
-                        previousItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF),
-                        regularCornerRadiusF,
-                        regularCornerRadiusF,
-                        nextItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF)
-                    )
+                if (itemViewType == meItemViewType) {
+                    // our extension method
+                    path.addRoundRect(
+                            rectF,
+                            // `ternary` is a simple extension function on Boolean
+                            previousItemTheSameType.ternary(groupedCornerRadiusF, regularCornerRadiusF),
+                            regularCornerRadiusF,
+                            regularCornerRadiusF,
+                            nextItemTheSameType.ternary(groupedCornerRadiusF, regularCornerRadiusF))
                 } else {
-                    Corners(
-                        regularCornerRadiusF,
-                        previousItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF),
-                        nextItemTheSameType.elvis(groupedCornerRadiusF, regularCornerRadiusF),
-                        regularCornerRadiusF
-                    )
-                }
-
-                path.apply {
-                    roundCorner(Corner.LEFT_TOP, corners.leftTop, rectF)
-                    roundCorner(Corner.TOP_RIGHT, corners.topRight, rectF)
-                    roundCorner(Corner.BOTTOM_RIGHT, corners.bottomRight, rectF)
-                    roundCorner(Corner.LEFT_BOTTOM, corners.leftBottom, rectF)
+                    // our extension method
+                    path.addRoundRect(
+                            rectF,
+                            regularCornerRadiusF,
+                            previousItemTheSameType.ternary(groupedCornerRadiusF, regularCornerRadiusF),
+                            nextItemTheSameType.ternary(groupedCornerRadiusF, regularCornerRadiusF),
+                            regularCornerRadiusF)
                 }
 
                 // although it's not required, let's still close the path
                 path.close()
             }
 
+            // draw item
             c.withSave {
 
+                // clip prepared path
                 c.clipPath(path)
 
-                val alpha = (view.alpha * 255.0F + 0.5F).toInt()
-
-                if (itemViewType == meItemViewType) {
-                    paint.alpha = alpha
-                    c.drawPaint(paint)
+                // we
+                val drawable = if (itemViewType == meItemViewType) {
+                    config.meBackgroundDrawable
                 } else {
-                    config.youBackgroundDrawable.alpha = alpha
-                    config.youBackgroundDrawable.draw(c)
+                    config.youBackgroundDrawable
                 }
+
+                // ensure drawable bounds
+                // previously we were listening for RecyclerView onGlobalLayout events,
+                // but as drawable bounds are lazy (it checks if bounds have changed internally)
+                // we are safe to set them each time
+                drawable.setBounds(0, 0, parent.width, parent.height)
+
+                // calculate alpha that will be applied to items (for appear/disappear animations)
+                drawable.alpha = (view.alpha * 255.0F + 0.5F).toInt()
+
+                // draw it
+                drawable.draw(c)
             }
         }
     }
 
-    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+    override fun getItemOffsets(
+            outRect: Rect,
+            view: View,
+            parent: RecyclerView,
+            state: RecyclerView.State) {
 
         // clear offsets first
         outRect.set(0, 0, 0, 0)
@@ -170,41 +167,44 @@ class MessageDecoration(
         val holder = parent.findContainingViewHolder(view) ?: return
 
         val itemViewType = holder.itemViewType
+
+        // we will process only items that we are interested in
         if (itemViewType != meItemViewType && itemViewType != youItemViewType) {
             return
         }
 
-        // if previous the same -> grouped padding-top else regular
-        // if next the same -> grouped padding-bottom else regular
+        // if previous the same -> grouped margin-top else regular
+        // if next the same -> grouped margin-bottom else regular
 
         // we will use adapter position to detect next & previous items
         // (they can be absent from layout at this point)
         val position = holder.adapterPosition
 
-        outRect.top = if (position > 0 && itemViewType == adapter.getItemViewType(position - 1)) {
-            config.groupedPadding
+        outRect.top = if (position > 0
+                && itemViewType == adapter.getItemViewType(position - 1)) {
+            config.groupedMargin
         } else {
-            config.regularPadding
+            config.regularMargin
         }
 
-        outRect.bottom =
-            if (position < (adapter.itemCount) - 1 && itemViewType == adapter.getItemViewType(position + 1)) {
-                config.groupedPadding
-            } else {
-                config.regularPadding
-            }
+        outRect.bottom = if (position < (adapter.itemCount) - 1
+                && itemViewType == adapter.getItemViewType(position + 1)) {
+            config.groupedMargin
+        } else {
+            config.regularMargin
+        }
     }
 
     private companion object {
 
         // as we are dealing with View, which is implicitly single-threaded, we can
-        // reuse this value for all calculations
-        private val _POINT = Point()
-        private val _RECT_F = RectF()
+        // reuse these values for all calculations
+        private val POINT = Point()
+        private val RECT_F = RectF()
 
         private fun View.relativeTo(group: ViewGroup): Point {
 
-            val point = _POINT
+            val point = POINT
 
             // as we are reusing point instance between multiple calls, it's important to clear
             // previous values with our current ones
@@ -223,6 +223,9 @@ class MessageDecoration(
             return point
         }
 
+        // extension method that _picks_ value. If boolean is true -> left is picked, else right
+        private fun <T> Boolean.ternary(left: T, right: T) = if (this) left else right
+
         private inline fun Canvas.withSave(action: Canvas.() -> Unit) {
             val save = this.save()
             try {
@@ -231,112 +234,115 @@ class MessageDecoration(
                 this.restoreToCount(save)
             }
         }
-    }
 
-    private class Timer(private val count: Int) {
+        private fun Path.addRoundRect(
+                bounds: RectF,
+                leftTopRadius: Float,
+                topRightRadius: Float,
+                bottomRightRadius: Float,
+                bottomLeftRadius: Float) {
 
-        fun step(action: () -> Unit) {
-            val start = System.nanoTime()
-            try {
-                action()
-            } finally {
-                val end = System.nanoTime()
-                steps.add(end - start)
-                if (steps.size == count) {
-                    val min = steps.min()
-                    val max = steps.max()
-                    val avg = steps.average()
-                    Debug.i("min: %d, max: %d, avg: %s", min, max, avg)
+            // we will be drawing from left-top
+            // we must init position to be between left-top & bottom-left (x=0,y=height/2)
+
+            moveTo(bounds.left, bounds.top + (bounds.height() / 2.0F))
+
+            // the same for all corners
+            val sweepAngle = 90.0F
+
+            // inner helper function to add an arc starting at [x,y]
+            fun arc(
+                    rectF: RectF,
+                    startAngle: Float,
+                    x: Float,
+                    y: Float) {
+                this.lineTo(x, y)
+                this.arcTo(rectF, startAngle, sweepAngle)
+            }
+
+            // anonymous lambda w/ immediate execution, please note that semicolon is required
+            // after the execution call
+            //
+            // left-top
+            {
+                // |x| | |
+                // | | | |
+                val rectF = RECT_F.apply {
+                    val diameter = leftTopRadius * 2.0F
+                    set(
+                            bounds.left,
+                            bounds.top,
+                            bounds.left + diameter,
+                            bounds.top + diameter)
                 }
-            }
-        }
+                arc(rectF, 180.0F, rectF.left, rectF.top + leftTopRadius)
+            }();
 
-        private val steps = mutableListOf<Long>()
-    }
-
-    private enum class Corner {
-        LEFT_TOP,
-        TOP_RIGHT,
-        BOTTOM_RIGHT,
-        LEFT_BOTTOM
-    }
-
-    private class Corners(
-        val leftTop: Float,
-        val topRight: Float,
-        val bottomRight: Float,
-        val leftBottom: Float
-    )
-
-    private fun <T> Boolean.elvis(left: T, right: T) = if (this) left else right
-
-    // Please note that his method assumes the movement LEFT->TOP->RIGHT->BOTTOM
-    private fun Path.roundCorner(corner: Corner, radius: Float, bounds: RectF) {
-
-        val rectF = _RECT_F
-        val diameter = radius * 2
-
-        when (corner) {
-
-            Corner.LEFT_TOP -> {
-
-                // |x| | |
-                // | | | |
-                rectF.set(
-                    bounds.left,
-                    bounds.top,
-                    bounds.left + diameter,
-                    bounds.top + diameter
-                )
-
-                this.lineTo(bounds.left, bounds.top + radius)
-                this.arcTo(rectF, 180.0F, 90.0F)
-            }
-
-            Corner.TOP_RIGHT -> {
-
+            // top-right
+            {
                 // | | |x|
                 // | | | |
-                rectF.set(
-                    bounds.right - diameter,
-                    bounds.top,
-                    bounds.right,
-                    bounds.top + diameter
-                )
+                val rectF = RECT_F.apply {
+                    val diameter = topRightRadius * 2.0F
+                    set(
+                            bounds.right - diameter,
+                            bounds.top,
+                            bounds.right,
+                            bounds.top + diameter)
+                }
+                arc(rectF, 270.0F, rectF.left + leftTopRadius, rectF.top)
+            }();
 
-                this.lineTo(bounds.right - radius, bounds.top)
-                this.arcTo(rectF, 270.0F, 90.0F)
-            }
-
-            Corner.BOTTOM_RIGHT -> {
-
+            // bottom-right
+            {
                 // | | | |
                 // | | |x|
-                rectF.set(
-                    bounds.right - diameter,
-                    bounds.bottom - diameter,
-                    bounds.right,
-                    bounds.bottom
-                )
+                val rectF = RECT_F.apply {
+                    val diameter = bottomRightRadius * 2.0F
+                    set(
+                            bounds.right - diameter,
+                            bounds.bottom - diameter,
+                            bounds.right,
+                            bounds.bottom)
+                }
+                arc(rectF, 0.0F, rectF.right, rectF.top + bottomRightRadius)
+            }();
 
-                this.lineTo(bounds.right, bounds.bottom - radius)
-                this.arcTo(rectF, 0.0F, 90.0F)
-            }
-
-            Corner.LEFT_BOTTOM -> {
-
+            // bottom-left
+            {
                 // | | | |
                 // |x| | |
-                rectF.set(
-                    bounds.left,
-                    bounds.bottom - diameter,
-                    bounds.left + diameter,
-                    bounds.bottom
-                )
-
-                this.lineTo(bounds.right - radius, bounds.bottom)
-                this.arcTo(rectF, 90.0F, 90.0F)
-            }
+                val rectF = RECT_F.apply {
+                    val diameter = bottomLeftRadius * 2.0F
+                    set(
+                            bounds.left,
+                            bounds.bottom - diameter,
+                            bounds.left + diameter,
+                            bounds.bottom)
+                }
+                arc(rectF, 90.0F, rectF.left + bottomLeftRadius, rectF.bottom)
+            }()
         }
     }
+
+//    private class Timer(private val count: Int) {
+//
+//        fun step(action: () -> Unit) {
+//            val start = System.nanoTime()
+//            try {
+//                action()
+//            } finally {
+//                val end = System.nanoTime()
+//                steps.add(end - start)
+//                if (steps.size == count) {
+//                    val min = steps.min()
+//                    val max = steps.max()
+//                    val avg = steps.average()
+//                    Debug.i("min: %d, max: %d, avg: %s", min, max, avg)
+//                }
+//            }
+//        }
+//
+//        private val steps = mutableListOf<Long>()
+//    }
 }

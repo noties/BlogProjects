@@ -1,6 +1,7 @@
 package io.noties.blog.gradientmessenger
 
 import android.app.Activity
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,15 +26,6 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // okay, `item_me` & `item_you` remove backgrounds and vertical padding
-        // rename decoration to modify both types
-        // add item offsets handling to decoration
-        // add padding to recycler (with clipToPadding=false)
-        // introduce common holder type for Me & You
-
-        // textColor to config?
-        // change me background to drawable also
-
         // create adapt instance
         // * if diff-util is used -> then decorations are not updated, so there will be gaps between
         // items that should not be. Using regular data-set-changed handler seems to work with that better
@@ -53,7 +45,7 @@ class MainActivity : Activity() {
                     r.getDimensionPixelSize(R.dimen.message_regular_vertical_padding),
                     r.getDimensionPixelSize(R.dimen.message_grouped_corner_radius),
                     r.getDimensionPixelSize(R.dimen.message_regular_corner_radius),
-                    r.getColor(R.color.message_me_background),
+                    ColorDrawable(r.getColor(R.color.message_me_background)),
                     GradientDrawable(r.getIntArray(R.array.list_gradient_color))
             )
 
@@ -79,33 +71,6 @@ class MainActivity : Activity() {
             recyclerView.post {
                 recyclerView.smoothScrollToPosition(items.size)
             }
-
-            // not smooth
-            // all these are not _smooth_
-//            recyclerView.post {
-//                recyclerView.smoothScrollToPosition(items.size - 1)
-//            }
-
-//            recyclerView.viewTreeObserver.addOnPreDrawListener(object: ViewTreeObserver.OnPreDrawListener {
-//                override fun onPreDraw(): Boolean {
-//                    recyclerView.post {
-//                        recyclerView.smoothScrollToPosition(items.size)
-//                    }
-//                    return true
-//                }
-//
-//            })
-//            val scrollAction = object: Runnable {
-//                override fun run() {
-//                    Debug.i("isComputing: ${recyclerView.isComputingLayout}, isAnimating: ${recyclerView.isAnimating}")
-//                    if (recyclerView.isAnimating) {
-//                        recyclerView.post(this)
-//                    } else {
-//                        recyclerView.smoothScrollToPosition(items.size - 1)
-//                    }
-//                }
-//            }
-//            recyclerView.post(scrollAction)
         }
 
 

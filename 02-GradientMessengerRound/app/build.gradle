@@ -7,7 +7,7 @@ android {
     buildToolsVersion '28.0.3'
 
     defaultConfig {
-        applicationId "io.noties.blog.gradientmessenger"
+        applicationId "io.noties.blog.gradientmessenger2"
         minSdkVersion 16
         targetSdkVersion 28
         versionCode 1
@@ -19,5 +19,5 @@ dependencies {
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
     implementation 'io.noties:adapt:2.0.0'
-    implementation 'io.noties:debug:5.0.0@jar'
+    implementation 'io.noties:debug:5.1.0'
 }
