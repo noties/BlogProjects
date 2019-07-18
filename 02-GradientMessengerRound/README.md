@@ -1,1 +1,1 @@
-[blog-post](https://noties.io/blog/2019/04/23/gradient-messenger/index.html)
+[blog-post](https://noties.io/blog/2019/05/18/gradient-messenger-round-2/index.html)
