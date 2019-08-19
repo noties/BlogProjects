@@ -10,7 +10,7 @@ import io.noties.adapt.Adapt
 import io.noties.adapt.Item
 import io.noties.debug.AndroidLogDebugOutput
 import io.noties.debug.Debug
-import java.util.*
+import java.util.Random
 
 class MainActivity : Activity() {
 
@@ -72,7 +72,6 @@ class MainActivity : Activity() {
                 recyclerView.smoothScrollToPosition(items.size)
             }
         }
-
 
         // set items
         adapt.setItems(items())

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ru.noties.scrollable.ScrollableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scrollable_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    app:scrollable_defaultCloseUp="true"
+    app:scrollable_maxScroll="240dip">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="240dip"
+        android:src="#F44336" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false">
+
+        <ScrollView
+            android:id="@+id/scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <View
+                    android:id="@+id/view"
+                    android:layout_width="match_parent"
+                    android:layout_height="1000dip"
+                    android:background="#fff" />
+
+            </LinearLayout>
+
+        </ScrollView>
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="80dip"
+            android:layout_height="96dip"
+            android:layout_marginLeft="16dip"
+            android:layout_marginTop="-48dip"
+            android:src="@drawable/image_gradient" />
+
+    </FrameLayout>
+
+</ru.noties.scrollable.ScrollableLayout>
